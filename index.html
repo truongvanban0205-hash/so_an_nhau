@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Theo dõi chia tiền và công nợ các cuộc nhậu">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nợ nhậu">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Sổ nợ ăn nhậu</title>
+<style>
+:root{--bg:#000;--card:#0c0c0c;--line:#222;--tx:#f2f2f2;--mut:#9a9a9a;--red:#ff5a5a;--green:#4ade80;--amber:#fbbf24;--pri:#3b82f6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:0 14px}
+header{position:sticky;top:0;background:#000;border-bottom:1px solid var(--line);z-index:5}
+header h1{font-size:17px;margin:0;padding:12px 0 6px}
+nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px}
+nav button{background:none;border:1px solid transparent;color:var(--mut);padding:7px 12px;border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap}
+nav button.on{background:#161616;border-color:#2a2a2a;color:var(--tx)}
+main{padding:16px 0 80px}
+h2{font-size:17px;margin:0 0 4px;letter-spacing:.2px}
+h3{font-size:15px;margin:22px 0 8px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:14px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 8px;font-weight:600;border-bottom:1px solid #2a2a2a;white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.num{text-align:right;white-space:nowrap}
+th.num{text-align:right}
+tfoot td{font-weight:700;border-bottom:none}
+.nw{white-space:nowrap}
+.badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge.red{background:#2a1111;color:var(--red)}
+.badge.amber{background:#2b2108;color:var(--amber)}
+.badge.green{background:#0d2616;color:var(--green)}
+.badge.gray{background:#1c1c1c;color:var(--mut)}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px 14px;margin:16px 0;background:var(--card)}
+.card .t{font-size:13px;font-weight:700;letter-spacing:.4px}
+.big{font-size:28px;font-weight:800;margin:6px 0 2px}
+.big.red{color:var(--red)}.big.green{color:var(--green)}
+.small{font-size:12px;color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;color:#cfcfcf}
+.row b{color:var(--tx)}
+hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+ul.d{padding-left:20px;margin:6px 0}
+ul.d li{margin:6px 0}
+.empty{color:var(--mut);padding:24px 0;text-align:center}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+button,input,select{font:inherit}
+button.b{background:#161616;border:1px solid #2c2c2c;color:var(--tx);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+button.b:hover{background:#1e1e1e}
+button.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+button.dg{color:var(--red)}
+button.sm{padding:3px 9px;font-size:13px}
+input[type=text],input[type=date],select{width:100%;background:#111;border:1px solid #2a2a2a;color:var(--tx);padding:8px 10px;border-radius:8px;font-size:16px}
+input:focus,select:focus{outline:1px solid var(--pri)}
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ir{display:grid;grid-template-columns:1fr 120px 34px;gap:6px;margin-bottom:6px}
+.chk{display:flex;align-items:center;gap:8px;padding:6px 0;color:var(--tx);font-size:15px;margin:0}
+.chk input{width:18px;height:18px}
+.chk .am{margin-left:auto;width:130px}
+.pv{background:#0a0a0a;border:1px dashed #2a2a2a;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:14px}
+.warn{color:var(--amber)}
+.ev-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+dialog{background:var(--card);color:var(--tx);border:1px solid #2a2a2a;border-radius:14px;padding:0;width:min(580px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.box{padding:16px;overflow:auto;max-height:92vh}
+.box h2{margin-bottom:10px}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Sổ nợ ăn nhậu</h1>
+  <nav id="nav"></nav>
+</div></header>
+<div class="wrap"><main id="app"></main></div>
+<dialog id="dlg"></dialog>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const KEY = 'so_no_an_nhau_v1';
+let db = load();
+let tab = 'debt';
+let f = null; // trạng thái form cuộc nhậu
+
+/* ---------- lưu trữ ---------- */
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && Array.isArray(d.members) && Array.isArray(d.events)) return d;
+  } catch (e) {}
+  return { members: [], events: [] };
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch (e) { toast('Không lưu được dữ liệu trên trình duyệt này'); }
+}
+
+/* ---------- tiện ích ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmt = n => Number(n).toLocaleString('vi-VN') + 'đ';
+const today = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+const fmtDate = iso => {
+  if (!iso) return 'Chưa xác định';
+  const [y, m, d] = iso.split('-');
+  return d + '/' + m + '/' + y;
+};
+const mem = id => db.members.find(m => m.id === id);
+const nameOf = id => { const m = mem(id); return m ? m.name : '(đã xóa)'; };
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+}
+// Nhận "130000", "130.000", "130.000đ", "88k". Rỗng => null. Sai => NaN
+function parseMoney(s) {
+  s = String(s == null ? '' : s).trim().toLowerCase();
+  if (!s) return null;
+  let mult = 1;
+  if (/(k|nghìn|ngàn)$/.test(s)) { mult = 1000; s = s.replace(/(k|nghìn|ngàn)$/, ''); }
+  s = s.replace(/[đd\s]/g, '').replace(/[.,]/g, '');
+  if (!/^\d+$/.test(s)) return NaN;
+  return parseInt(s, 10) * mult;
+}
+const eventTotal = ev => ev.items.reduce((a, i) => a + (i.amount || 0), 0);
+
+/* ---------- tính toán ---------- */
+function info(ev, p) {
+  const isPayer = p.mid === ev.payerId;
+  const share = (p.amount === null || p.amount === undefined) ? null : p.amount;
+  const pays = (p.payments || []).reduce((a, x) => a + x.amount, 0);
+  if (isPayer) return { isPayer, share, paid: share || 0, remaining: 0, status: 'Ứng trước', cls: 'gray' };
+  let remaining = share === null ? null : Math.max(share - pays, 0);
+  let status, cls;
+  if (share === null) { status = pays > 0 ? 'Trả một phần' : 'Chưa trả'; cls = pays > 0 ? 'amber' : 'red'; }
+  else if (remaining === 0) { status = 'Đã trả'; cls = 'green'; }
+  else if (pays > 0) { status = 'Trả một phần'; cls = 'amber'; }
+  else { status = 'Chưa trả'; cls = 'red'; }
+  return { isPayer, share, paid: pays, remaining, status, cls };
+}
+function summary() {
+  const by = {};
+  let paidTotal = 0;
+  for (const ev of db.events) {
+    for (const p of ev.participants) {
+      const i = info(ev, p);
+      if (i.isPayer) continue;
+      paidTotal += i.paid;
+      if (i.share !== null && i.remaining <= 0) continue;
+      (by[p.mid] = by[p.mid] || []).push({ ev, p, i });
+    }
+  }
+  const rows = Object.keys(by).map(mid => {
+    const lines = by[mid].sort((a, b) => a.ev.date < b.ev.date ? -1 : a.ev.date > b.ev.date ? 1 : a.ev.created - b.ev.created);
+    const known = lines.reduce((a, l) => a + (l.i.remaining || 0), 0);
+    const unknown = lines.filter(l => l.i.remaining === null).length;
+    const anyPaid = lines.some(l => l.i.paid > 0);
+    return { mid, lines, known, unknown, anyPaid, date: lines[0].ev.date };
+  }).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const total = rows.reduce((a, r) => a + r.known, 0);
+  return { rows, total, paidTotal };
+}
+function receivables() {
+  const r = {};
+  for (const ev of db.events)
+    for (const p of ev.participants) {
+      const i = info(ev, p);
+      if (i.isPayer || i.remaining === null || i.remaining <= 0) continue;
+      r[ev.payerId] = (r[ev.payerId] || 0) + i.remaining;
+    }
+  return r;
+}
+function amountText(r) {
+  if (r.known > 0) return fmt(r.known) + (r.unknown ? ' + chưa xác định' : '');
+  return 'Chưa xác định';
+}
+
+/* ---------- giao diện chính ---------- */
+const TABS = [['debt', 'Tổng nợ'], ['events', 'Cuộc nhậu'], ['members', 'Thành viên'], ['backup', 'Sao lưu']];
+function setTab(t) { tab = t; render(); window.scrollTo(0, 0); }
+function render() {
+  $('#nav').innerHTML = TABS.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" onclick="setTab('${k}')">${l}</button>`).join('');
+  $('#app').innerHTML = tab === 'debt' ? renderDebt() : tab === 'events' ? renderEvents() : tab === 'members' ? renderMembers() : renderBackup();
+}
+
+function renderDebt() {
+  const s = summary();
+  let h = `<h2>BẢNG THEO DÕI CÁC KHOẢN NỢ ĂN NHẬU</h2><div class="sub">Cập nhật đến ngày ${fmtDate(today())}</div>`;
+  if (!s.rows.length) {
+    h += `<div class="empty">${db.events.length ? 'Không còn khoản nợ nào, mọi người đã trả đủ.' : 'Chưa có dữ liệu. Thêm thành viên rồi tạo cuộc nhậu.'}</div>`;
+  } else {
+    h += `<div class="scroll"><table><thead><tr><th class="num">STT</th><th>Người nợ</th><th>Ngày phát sinh</th><th class="num">Số tiền</th><th>Tình trạng</th></tr></thead><tbody>`;
+    s.rows.forEach((r, i) => {
+      const d = fmtDate(r.date) + (r.lines.length > 1 ? ` (+${r.lines.length - 1} lần)` : '');
+      h += `<tr><td class="num">${i + 1}</td><td>${esc(nameOf(r.mid))}</td><td class="nw">${d}</td><td class="num">${amountText(r)}</td><td><span class="badge ${r.anyPaid ? 'amber' : 'red'}">${r.anyPaid ? 'Trả một phần' : 'Chưa trả'}</span></td></tr>`;
+    });
+    h += `</tbody><tfoot><tr><td></td><td>Tổng đã xác định</td><td></td><td class="num">${fmt(s.total)}</td><td></td></tr></tfoot></table></div>`;
+
+    h += `<h3>Chi tiết khoản nợ:</h3><ul class="d">`;
+    for (const r of s.rows) {
+      h += `<li><b>${esc(nameOf(r.mid))}</b>: ${esc(amountText(r))}<ul class="d">`;
+      for (const l of r.lines) {
+        const sh = l.i.share === null ? 'chưa xác định' : fmt(l.i.share);
+        const rem = l.i.remaining === null ? 'chưa xác định' : fmt(l.i.remaining);
+        h += `<li>${fmtDate(l.ev.date)} · ${esc(l.ev.place || 'Cuộc nhậu')} · trả cho ${esc(nameOf(l.ev.payerId))}: phải trả ${sh}, đã đưa ${fmt(l.i.paid)}, còn ${rem} <button class="b sm" onclick="openPay('${l.ev.id}','${l.p.mid}')">Ghi trả</button></li>`;
+      }
+      h += `</ul></li>`;
+    }
+    h += `</ul>`;
+  }
+
+  const unk = s.rows.filter(r => r.unknown > 0).map(r => nameOf(r.mid));
+  h += `<div class="card"><div class="t">TỔNG HỢP CÔNG NỢ</div>
+    <div class="big ${s.total > 0 ? 'red' : 'green'}">${fmt(s.total)}</div>
+    <div class="small">Tổng nợ đã xác định${unk.length ? ', chưa bao gồm ' + esc(unk.join(', ')) : ''}.</div>
+    <hr>
+    <div class="row"><span>Số người còn nợ</span><b>${s.rows.length} người</b></div>
+    <div class="row"><span>Đã thanh toán</span><b>${fmt(s.paidTotal)}</b></div></div>`;
+
+  const rc = receivables();
+  const rcIds = Object.keys(rc);
+  if (rcIds.length) {
+    h += `<h3>Người ứng trước sẽ được nhận lại</h3><div class="scroll"><table><tbody>`;
+    for (const id of rcIds) h += `<tr><td>${esc(nameOf(id))}</td><td class="num">${fmt(rc[id])}</td></tr>`;
+    h += `</tbody></table></div>`;
+  }
+  h += `<div class="acts" style="justify-content:flex-start"><button class="b" onclick="copySummary()">Sao chép bảng nợ để gửi nhóm</button></div>`;
+  return h;
+}
+
+function renderEvents() {
+  let h = `<div class="bar"><h2>Cuộc nhậu</h2><button class="b pri" onclick="openEvent()">+ Tạo cuộc nhậu</button></div>`;
+  if (!db.members.length) h += `<div class="empty">Chưa có thành viên. <button class="b" onclick="setTab('members')">Thêm thành viên</button></div>`;
+  else if (!db.events.length) h += `<div class="empty">Chưa có cuộc nhậu nào.</div>`;
+  const evs = [...db.events].sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : b.created - a.created);
+  for (const ev of evs) {
+    const total = eventTotal(ev);
+    const items = ev.items.map(i => (i.label ? esc(i.label) + ' ' : '') + fmt(i.amount)).join(' + ');
+    h += `<div class="card"><div class="ev-h"><div><b>${fmtDate(ev.date)} · ${esc(ev.place || 'Cuộc nhậu')}</b>
+      <div class="small">Tổng: ${total > 0 ? fmt(total) : 'chưa xác định'}${ev.items.length > 1 ? ' (' + items + ')' : ''} · Ứng trước: ${esc(nameOf(ev.payerId))}</div></div>
+      <div><button class="b sm" onclick="openEvent('${ev.id}')">Sửa</button> <button class="b sm dg" onclick="deleteEvent('${ev.id}')">Xóa</button></div></div>
+      <div class="scroll"><table style="margin-top:8px"><thead><tr><th>Người</th><th class="num">Phải trả</th><th class="num">Đã đưa</th><th class="num">Còn lại</th><th>Tình trạng</th><th></th></tr></thead><tbody>`;
+    for (const p of ev.participants) {
+      const i = info(ev, p);
+      h += `<tr><td>${esc(nameOf(p.mid))}</td><td class="num">${i.share === null ? 'Chưa xác định' : fmt(i.share)}</td><td class="num">${fmt(i.paid)}</td><td class="num">${i.isPayer ? '-' : i.remaining === null ? 'Chưa xác định' : fmt(i.remaining)}</td><td><span class="badge ${i.cls}">${i.status}</span></td><td class="num">${i.isPayer ? '' : `<button class="b sm" onclick="openPay('${ev.id}','${p.mid}')">Ghi trả</button>`}</td></tr>`;
+    }
+    h += `</tbody></table></div></div>`;
+  }
+  return h;
+}
+
+function renderMembers() {
+  const s = summary(), rc = receivables();
+  const owe = {}; s.rows.forEach(r => owe[r.mid] = r);
+  let h = `<h2>Thành viên</h2><div class="sub">${db.members.length} người</div>
+    <div class="ir" style="grid-template-columns:1fr auto"><input type="text" id="newm" placeholder="Tên thành viên mới" onkeydown="if(event.key==='Enter')addMember()"><button class="b pri" onclick="addMember()">Thêm</button></div>`;
+  if (!db.members.length) h += `<div class="empty">Chưa có thành viên nào.</div>`;
+  else {
+    h += `<div class="scroll"><table><thead><tr><th>Tên</th><th class="num">Đang nợ</th><th class="num">Được nhận</th><th></th></tr></thead><tbody>`;
+    for (const m of db.members) {
+      const o = owe[m.id];
+      h += `<tr><td>${esc(m.name)}</td><td class="num">${o ? amountText(o) : '0đ'}</td><td class="num">${rc[m.id] ? fmt(rc[m.id]) : '0đ'}</td><td class="num nw"><button class="b sm" onclick="renameMember('${m.id}')">Sửa</button> <button class="b sm dg" onclick="deleteMember('${m.id}')">Xóa</button></td></tr>`;
+    }
+    h += `</tbody></table></div>`;
+  }
+  return h;
+}
+
+function renderBackup() {
+  return `<h2>Sao lưu dữ liệu</h2>
+    <div class="sub">Dữ liệu lưu ngay trong trình duyệt của máy này. Đổi máy hoặc xóa dữ liệu trình duyệt sẽ mất, nên thỉnh thoảng hãy xuất file để giữ.</div>
+    <div class="card"><div class="t">XUẤT / NHẬP</div><div class="acts" style="justify-content:flex-start;flex-wrap:wrap">
+      <button class="b pri" onclick="exportJson()">Xuất file JSON</button>
+      <button class="b" onclick="$('#imp').click()">Nhập từ file JSON</button>
+      <input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="importJson(this)">
+    </div><div class="small" style="margin-top:10px">Nhập file sẽ thay toàn bộ dữ liệu hiện tại.</div></div>
+    <div class="card"><div class="t">XÓA TOÀN BỘ</div><div class="small" style="margin:6px 0 10px">Xóa hết thành viên và cuộc nhậu trên máy này.</div>
+      <button class="b dg" onclick="resetAll()">Xóa toàn bộ dữ liệu</button></div>`;
+}
+
+/* ---------- dialog ---------- */
+const dlg = $('#dlg');
+dlg.addEventListener('click', e => { if (e.target === dlg) closeDlg(); });
+function openDlg(html) {
+  dlg.innerHTML = `<div class="box">${html}</div>`;
+  if (!dlg.open) dlg.showModal();
+}
+function closeDlg() { if (dlg.open) dlg.close(); }
+
+/* ---------- thành viên ---------- */
+function addMember() {
+  const inp = $('#newm');
+  const n = inp.value.trim();
+  if (!n) return;
+  if (db.members.some(m => m.name.toLowerCase() === n.toLowerCase())) { toast('Tên này đã có'); return; }
+  db.members.push({ id: uid(), name: n });
+  save(); render();
+  const again = $('#newm'); if (again) again.focus();
+}
+function renameMember(id) {
+  const m = mem(id); if (!m) return;
+  const n = (prompt('Tên mới:', m.name) || '').trim();
+  if (!n || n === m.name) return;
+  if (db.members.some(x => x.id !== id && x.name.toLowerCase() === n.toLowerCase())) { toast('Tên này đã có'); return; }
+  m.name = n; save(); render();
+}
+function deleteMember(id) {
+  const used = db.events.some(ev => ev.payerId === id || ev.participants.some(p => p.mid === id));
+  if (used) { toast('Người này đã có trong cuộc nhậu, không xóa được'); return; }
+  if (!confirm('Xóa ' + nameOf(id) + '?')) return;
+  db.members = db.members.filter(m => m.id !== id);
+  save(); render();
+}
+
+/* ---------- ghi nhận thanh toán ---------- */
+function openPay(evId, mid) {
+  const ev = db.events.find(e => e.id === evId);
+  const p = ev && ev.participants.find(x => x.mid === mid);
+  if (!p) return;
+  const i = info(ev, p);
+  let h = `<h2>Ghi nhận thanh toán</h2>
+    <div><b>${esc(nameOf(mid))}</b> trả cho <b>${esc(nameOf(ev.payerId))}</b></div>
+    <div class="small">${fmtDate(ev.date)} · ${esc(ev.place || 'Cuộc nhậu')}</div>
+    <div class="row"><span>Phải trả</span><b>${i.share === null ? 'Chưa xác định' : fmt(i.share)}</b></div>
+    <div class="row"><span>Đã đưa</span><b>${fmt(i.paid)}</b></div>
+    <div class="row"><span>Còn lại</span><b>${i.remaining === null ? 'Chưa xác định' : fmt(i.remaining)}</b></div>`;
+  if (p.payments && p.payments.length) {
+    h += `<hr><div class="small">Các lần đã đưa:</div><ul class="d">`;
+    p.payments.forEach((x, k) => { h += `<li>${fmtDate(x.date)}: ${fmt(x.amount)} <button class="b sm dg" onclick="delPay('${evId}','${mid}',${k})">Xóa</button></li>`; });
+    h += `</ul>`;
+  }
+  const def = i.remaining && i.remaining > 0 ? String(i.remaining) : '';
+  h += `<div class="g2"><div><label>Số tiền đưa</label><input type="text" id="payamt" inputmode="text" value="${def}" placeholder="vd 130000 hoặc 130k"></div>
+    <div><label>Ngày</label><input type="date" id="paydate" value="${today()}"></div></div>
+    <div class="acts"><button class="b" onclick="closeDlg()">Đóng</button><button class="b pri" onclick="savePay('${evId}','${mid}')">Lưu</button></div>`;
+  openDlg(h);
+}
+function savePay(evId, mid) {
+  const ev = db.events.find(e => e.id === evId);
+  const p = ev && ev.participants.find(x => x.mid === mid);
+  if (!p) return;
+  const amt = parseMoney($('#payamt').value);
+  const date = $('#paydate').value || today();
+  if (!amt || Number.isNaN(amt) || amt <= 0) { toast('Nhập số tiền hợp lệ'); return; }
+  const i = info(ev, p);
+  if (i.remaining !== null && amt > i.remaining) { toast('Vượt quá số còn nợ (' + fmt(i.remaining) + ')'); return; }
+  p.payments = p.payments || [];
+  p.payments.push({ amount: amt, date });
+  save(); closeDlg(); render(); toast('Đã ghi nhận ' + fmt(amt));
+}
+function delPay(evId, mid, k) {
+  const ev = db.events.find(e => e.id === evId);
+  const p = ev && ev.participants.find(x => x.mid === mid);
+  if (!p || !confirm('Xóa lần đưa tiền này?')) return;
+  p.payments.splice(k, 1);
+  save(); render(); openPay(evId, mid);
+}
+
+/* ---------- cuộc nhậu ---------- */
+function openEvent(id) {
+  if (!db.members.length) { toast('Hãy thêm thành viên trước'); setTab('members'); return; }
+  const ev = id && db.events.find(e => e.id === id);
+  if (ev) {
+    f = { id: ev.id, date: ev.date, place: ev.place, payerId: ev.payerId,
+      items: ev.items.map(i => ({ label: i.label, amount: String(i.amount) })),
+      sel: new Set(ev.participants.map(p => p.mid)), mode: ev.mode, custom: {} };
+    if (!f.items.length) f.items.push({ label: '', amount: '' });
+    ev.participants.forEach(p => f.custom[p.mid] = p.amount === null ? '' : String(p.amount));
+  } else {
+    f = { id: null, date: today(), place: '', payerId: '', items: [{ label: '', amount: '' }], sel: new Set(), mode: 'equal', custom: {} };
+  }
+  renderForm();
+}
+function renderForm() {
+  let h = `<h2>${f.id ? 'Sửa cuộc nhậu' : 'Tạo cuộc nhậu'}</h2>
+    <div class="g2"><div><label>Ngày</label><input type="date" value="${esc(f.date)}" oninput="f.date=this.value"></div>
+    <div><label>Quán / ghi chú</label><input type="text" value="${esc(f.place)}" placeholder="vd Quán Ba Tèo" oninput="f.place=this.value"></div></div>
+    <label>Ai ứng tiền trả quán trước</label>
+    <select onchange="setPayer(this.value)"><option value="">-- chọn --</option>${db.members.map(m => `<option value="${m.id}" ${m.id === f.payerId ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select>
+    <label>Các khoản tiền (để trống nếu chưa biết)</label>`;
+  f.items.forEach((it, k) => {
+    h += `<div class="ir"><input type="text" placeholder="Khoản (vd bia)" value="${esc(it.label)}" oninput="f.items[${k}].label=this.value">
+      <input type="text" placeholder="Số tiền" value="${esc(it.amount)}" oninput="f.items[${k}].amount=this.value;updatePreview()">
+      <button class="b sm dg" onclick="removeItem(${k})" ${f.items.length < 2 ? 'disabled' : ''}>×</button></div>`;
+  });
+  h += `<button class="b sm" onclick="addItem()">+ Thêm khoản</button>
+    <label>Cách chia</label>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <label class="chk"><input type="radio" name="mode" ${f.mode === 'equal' ? 'checked' : ''} onchange="setMode('equal')">Chia đều</label>
+      <label class="chk"><input type="radio" name="mode" ${f.mode === 'custom' ? 'checked' : ''} onchange="setMode('custom')">Nhập riêng từng người</label></div>
+    <label>Người tham gia</label>`;
+  for (const m of db.members) {
+    const on = f.sel.has(m.id);
+    h += `<label class="chk"><input type="checkbox" ${on ? 'checked' : ''} onchange="toggleSel('${m.id}')">${esc(m.name)}${m.id === f.payerId ? ' <span class="small">(ứng trước)</span>' : ''}`;
+    if (on && f.mode === 'custom') h += `<input type="text" class="am" placeholder="Số tiền" value="${esc(f.custom[m.id] || '')}" onclick="event.stopPropagation()" oninput="f.custom['${m.id}']=this.value;updatePreview()">`;
+    h += `</label>`;
+  }
+  h += `<button class="b sm" onclick="quickAddMember()">+ Thêm người mới</button>
+    <div class="pv" id="pv"></div>
+    <div class="acts"><button class="b" onclick="closeDlg()">Hủy</button><button class="b pri" onclick="saveEvent()">Lưu</button></div>`;
+  openDlg(h);
+  updatePreview();
+}
+function setPayer(v) { f.payerId = v; if (v) f.sel.add(v); renderForm(); }
+function setMode(m) { f.mode = m; renderForm(); }
+function toggleSel(id) { f.sel.has(id) ? f.sel.delete(id) : f.sel.add(id); renderForm(); }
+function addItem() { f.items.push({ label: '', amount: '' }); renderForm(); }
+function removeItem(k) { f.items.splice(k, 1); renderForm(); }
+function quickAddMember() {
+  const n = (prompt('Tên người mới:') || '').trim();
+  if (!n) return;
+  if (db.members.some(m => m.name.toLowerCase() === n.toLowerCase())) { toast('Tên này đã có'); return; }
+  const m = { id: uid(), name: n };
+  db.members.push(m); f.sel.add(m.id); save(); renderForm();
+}
+function calc() {
+  let total = 0, err = null;
+  for (const it of f.items) {
+    const v = parseMoney(it.amount);
+    if (v === null) continue;
+    if (Number.isNaN(v)) { err = 'Số tiền không hợp lệ: ' + it.amount; continue; }
+    total += v;
+  }
+  const mids = db.members.filter(m => f.sel.has(m.id)).map(m => m.id);
+  const shares = [];
+  if (f.mode === 'equal') {
+    const n = mids.length;
+    mids.forEach((mid, k) => {
+      let a = null;
+      if (n && total > 0) a = Math.floor(total / n) + (k < total % n ? 1 : 0);
+      shares.push({ mid, amount: a });
+    });
+  } else {
+    mids.forEach(mid => {
+      const v = parseMoney(f.custom[mid]);
+      if (Number.isNaN(v)) { err = err || 'Số tiền không hợp lệ: ' + f.custom[mid]; shares.push({ mid, amount: null }); }
+      else shares.push({ mid, amount: v });
+    });
+  }
+  return { total, err, shares };
+}
+function updatePreview() {
+  const pv = $('#pv'); if (!pv) return;
+  const c = calc();
+  let h = '';
+  if (c.err) h += `<div class="warn">${esc(c.err)}</div>`;
+  h += `<div>Tổng các khoản: <b>${c.total > 0 ? fmt(c.total) : 'chưa xác định'}</b> · ${c.shares.length} người</div>`;
+  if (c.shares.length) {
+    h += c.shares.map(s => `<div class="small" style="color:#cfcfcf">${esc(nameOf(s.mid))}: ${s.amount === null ? 'chưa xác định' : fmt(s.amount)}${s.mid === f.payerId ? ' (ứng trước)' : ''}</div>`).join('');
+  }
+  if (f.mode === 'custom' && c.total > 0) {
+    const known = c.shares.reduce((a, s) => a + (s.amount || 0), 0);
+    if (known !== c.total) h += `<div class="warn small" style="margin-top:6px">Tổng nhập riêng ${fmt(known)}, lệch ${fmt(Math.abs(c.total - known))} so với tổng các khoản.</div>`;
+  }
+  if (f.payerId && !f.sel.has(f.payerId)) h += `<div class="small" style="margin-top:6px">Người ứng trước không tham gia chia, chỉ trả hộ.</div>`;
+  pv.innerHTML = h;
+}
+function saveEvent() {
+  const c = calc();
+  if (c.err) { toast(c.err); return; }
+  if (!f.date) { toast('Chọn ngày'); return; }
+  if (!f.payerId) { toast('Chọn người ứng tiền trả quán'); return; }
+  if (!c.shares.length) { toast('Chọn người tham gia'); return; }
+  const items = f.items.map(it => ({ label: it.label.trim(), amount: parseMoney(it.amount) })).filter(it => it.amount && it.amount > 0);
+  const old = f.id ? db.events.find(e => e.id === f.id) : null;
+  const participants = c.shares.map(s => {
+    const op = old && old.participants.find(p => p.mid === s.mid);
+    return { mid: s.mid, amount: s.amount, payments: op ? op.payments : [] };
+  });
+  const ev = { id: f.id || uid(), created: old ? old.created : Date.now(), date: f.date, place: f.place.trim(), payerId: f.payerId, items, mode: f.mode, participants };
+  if (old) Object.assign(old, ev); else db.events.push(ev);
+  save(); closeDlg(); render(); toast('Đã lưu cuộc nhậu');
+}
+function deleteEvent(id) {
+  const ev = db.events.find(e => e.id === id);
+  if (!ev || !confirm('Xóa cuộc nhậu ' + fmtDate(ev.date) + ' ' + (ev.place || '') + '? Các khoản đã ghi trả của cuộc này cũng mất.')) return;
+  db.events = db.events.filter(e => e.id !== id);
+  save(); render();
+}
+
+/* ---------- sao chép / sao lưu ---------- */
+function copySummary() {
+  const s = summary();
+  let t = 'BẢNG NỢ ĂN NHẬU (cập nhật ' + fmtDate(today()) + ')\n';
+  s.rows.forEach((r, i) => { t += (i + 1) + '. ' + nameOf(r.mid) + ': ' + amountText(r) + '\n'; });
+  t += 'Tổng đã xác định: ' + fmt(s.total);
+  const done = () => toast('Đã sao chép');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('Không sao chép được'); }
+    ta.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback);
+  else fallback();
+}
+function exportJson() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'so-no-an-nhau-' + today() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function importJson(inp) {
+  const file = inp.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !Array.isArray(d.members) || !Array.isArray(d.events)) throw new Error('sai định dạng');
+      d.events.forEach(ev => {
+        ev.items = ev.items || [];
+        ev.created = ev.created || 0;
+        ev.participants = (ev.participants || []).map(p => ({ mid: p.mid, amount: p.amount == null ? null : p.amount, payments: p.payments || [] }));
+      });
+      if (!confirm('Thay toàn bộ dữ liệu hiện tại bằng file này (' + d.members.length + ' người, ' + d.events.length + ' cuộc nhậu)?')) return;
+      db = { members: d.members, events: d.events };
+      save(); render(); toast('Đã nhập dữ liệu');
+    } catch (e) { toast('File không hợp lệ'); }
+    inp.value = '';
+  };
+  r.readAsText(file);
+}
+function resetAll() {
+  if (!confirm('Xóa TOÀN BỘ dữ liệu? Không khôi phục được.')) return;
+  db = { members: [], events: [] };
+  save(); render(); toast('Đã xóa');
+}
+
+render();
+
+/* ---------- PWA: chạy offline, cài lên màn hình chính ---------- */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
